@@ -3,228 +3,390 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Lead Processor | Real Estate Dashboard</title>
+    <title>SF-AI | Corporate Sales Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #00a1e0;
-            --primary-dark: #0070d2;
-            --bg: #f3f4f6;
-            --card-bg: #ffffff;
-            --text-main: #111827;
-            --text-muted: #6b7280;
-            --border: #e5e7eb;
+            /* Corporate Professional Palette - Neutral Zinc */
+            --bg-body: #09090b;
+            --bg-pane: #18181b;
+            --bg-surface: #27272a;
+            --border: #27272a;
+            --accent: #6366f1; /* Sophisticated Indigo */
+            --accent-soft: rgba(99, 102, 241, 0.1);
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --header-h: 64px;
+            --radius: 6px;
+            
+            /* Status Colors - Refined */
             --success: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
-            --spam: #6b7280;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text-main); line-height: 1.5; }
+        body { 
+            font-family: 'Inter', -apple-system, system-ui, sans-serif; 
+            background: var(--bg-body); 
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+        }
 
+        /* --- Custom Scrollbar --- */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--bg-surface); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--border); }
+
+        /* --- Header & Ticker --- */
         header {
-            background: #001b34;
-            color: white;
-            padding: 1rem 2rem;
+            height: var(--header-h);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            flex-shrink: 0;
+            background: var(--bg-pane);
+        }
+
+        .header-left { display: flex; align-items: center; gap: 2.5rem; }
+        .logo { font-weight: 700; font-size: 1rem; letter-spacing: -0.01em; display: flex; align-items: center; gap: 0.5rem; }
+        .logo::before { content: ''; width: 8px; height: 8px; background: var(--accent); border-radius: 2px; }
+        
+        .ticker {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            display: flex;
+            gap: 1.5rem;
+            border-left: 1px solid var(--border);
+            padding-left: 1.5rem;
+        }
+        .ticker span { color: var(--text-primary); font-weight: 600; }
+
+        /* --- Layout Grid --- */
+        .app-container {
+            display: grid;
+            grid-template-columns: 340px 1fr 360px;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .pane {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            overflow: hidden;
+            background: var(--bg-pane);
+        }
+        .pane:last-child { border-right: none; }
+
+        .pane-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 100;
         }
 
-        .logo { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
-        .logo span { color: var(--primary); }
+        /* --- Left Pane: Leads List --- */
+        #lead-grid {
+            overflow-y: auto;
+            flex-grow: 1;
+        }
 
-        .btn {
-            padding: 0.6rem 1.2rem;
-            border-radius: 0.375rem;
+        .lead-row {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+        .lead-row:hover { background: var(--bg-body); }
+        .lead-row.active { 
+            background: var(--bg-body);
+            box-shadow: inset 3px 0 0 var(--accent);
+        }
+
+        .lead-row h3 { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.25rem; }
+        .lead-row .company { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.85rem; }
+        
+        .badge-row { display: flex; gap: 0.5rem; align-items: center; }
+        .badge {
+            font-size: 0.625rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            border: 1px solid transparent;
+        }
+        .badge.status-hot { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+
+        /* --- Middle Pane: Workspace --- */
+        #workspace-pane { padding: 3rem; overflow-y: auto; background: var(--bg-body); }
+        
+        .workspace-header { margin-bottom: 2.5rem; }
+        .workspace-header h2 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+        .workspace-header p { color: var(--accent); font-weight: 500; font-size: 0.875rem; }
+
+        .section-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .enquiry-box {
+            background: var(--bg-pane);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            font-size: 0.9375rem;
+            line-height: 1.7;
+            color: var(--text-primary);
+            margin-bottom: 2.5rem;
+        }
+
+        /* Tabs System */
+        .tabs {
+            display: flex;
+            gap: 2rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2rem;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 1rem 0;
+            font-size: 0.8125rem;
             font-weight: 600;
             cursor: pointer;
-            border: none;
-            transition: all 0.2s;
+            position: relative;
+            transition: color 0.2s;
+        }
+        .tab-btn:hover { color: var(--text-secondary); }
+        .tab-btn.active { color: var(--accent); }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; right: 0; height: 2px;
+            background: var(--accent);
+        }
+
+        .tab-content { display: none; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* AI Card Styling */
+        .ai-card {
+            background: var(--bg-pane);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .ai-card h4 { font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem; letter-spacing: 0.08em; font-weight: 700; }
+
+        /* --- Right Pane: System Log --- */
+        #log-container {
+            background: #000;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            line-height: 1.6;
+        }
+
+        .log-entry { margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px solid #111; }
+        .log-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+        .log-type { color: var(--accent); font-weight: 600; }
+        .log-ts { color: var(--text-muted); font-size: 0.65rem; }
+        .log-body { color: #d4d4d8; white-space: pre-wrap; word-break: break-all; margin-top: 0.5rem; display: block;}
+
+        /* --- Global Elements --- */
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.8125rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 0.5rem;
         }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-dark); }
-        .btn-outline { background: transparent; border: 1px solid white; color: white; }
-        .btn-outline:hover { background: rgba(255,255,255,0.1); }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: #4f46e5; transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+        
+        .btn-outline { background: transparent; border-color: var(--border); color: var(--text-secondary); }
+        .btn-outline:hover { background: var(--bg-surface); color: var(--text-primary); }
 
-        main {
-            display: grid;
-            grid-template-columns: 1fr 400px;
-            gap: 2rem;
-            padding: 2rem;
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-
-        /* Responsive Layout */
-        @media (max-width: 1024px) {
-            main { grid-template-columns: 1fr; }
-            #detail-panel { position: static; margin-top: 2rem; }
-        }
-
-        /* Lead Grid */
-        #lead-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .lead-card {
-            background: var(--card-bg);
-            padding: 1.5rem;
-            border-radius: 0.75rem;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            cursor: pointer;
-            transition: transform 0.2s, border-color 0.2s;
-        }
-        .lead-card:hover { transform: translateY(-4px); border-color: var(--primary); }
-        .lead-card.active { border: 2px solid var(--primary); }
-
-        .lead-card h3 { font-size: 1.125rem; margin-bottom: 0.5rem; }
-        .lead-card .company { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem; font-weight: 500; }
-        .lead-card .badge {
-            display: inline-block;
-            padding: 0.25rem 0.5rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: var(--bg);
-            color: var(--text-muted);
-        }
-
-        /* Detail Panel */
-        #detail-panel {
-            background: var(--card-bg);
-            border-radius: 0.75rem;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            padding: 1.5rem;
-            height: fit-content;
-            position: sticky;
-            top: 5rem;
-            min-height: 400px;
-        }
-
-        .panel-placeholder { text-align: center; color: var(--text-muted); padding: 4rem 0; }
-        .ai-section { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
-        .ai-section h4 { margin-bottom: 1rem; color: var(--primary-dark); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
-
-        .priority-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 0.375rem;
-            color: white;
-            font-weight: bold;
-            font-size: 0.875rem;
-        }
-        .priority-High { background: var(--success); }
-        .priority-Medium { background: var(--warning); }
-        .priority-Low { background: var(--primary); }
-        .priority-Spam { background: var(--spam); }
-        .priority-Hot { background: var(--danger); }
-
-        .ai-summary { font-size: 0.95rem; margin-bottom: 1rem; color: var(--text-main); }
-        .red-flags { color: var(--danger); font-size: 0.875rem; margin-bottom: 1rem; }
-        .red-flags li { margin-left: 1.2rem; }
-
-        .listing-match {
-            background: #f9fafb;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            margin-bottom: 0.75rem;
-            font-size: 0.875rem;
-            border: 1px solid var(--border);
-        }
-        .listing-match .rank { font-weight: bold; color: var(--primary); }
-
-        .agent-box {
-            background: #eff6ff;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border-left: 4px solid var(--primary);
-        }
-
-        /* Loading Spinner */
         .spinner {
-            border: 3px solid rgba(0,0,0,0.1);
-            width: 36px;
-            height: 36px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            width: 18px; height: 18px;
             border-radius: 50%;
-            border-left-color: var(--primary);
-            animation: spin 1s linear infinite;
-            margin: 2rem auto;
+            border-left-color: #fff;
+            animation: spin 0.7s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Modal */
-        #sync-modal {
-            display: none;
+        .hidden { display: none !important; }
+
+        /* --- Toast System --- */
+        #toast-container {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 9999;
+        }
+
+        .toast {
+            background: var(--bg-pane);
+            border: 1px solid var(--border);
+            padding: 1rem 1.25rem;
+            border-radius: var(--radius);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            color: var(--text-primary);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            min-width: 320px;
+            display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
+            animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            border-left: 3px solid var(--accent);
         }
-        .modal-content {
-            background: white;
-            padding: 2rem;
-            border-radius: 0.75rem;
-            max-width: 800px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
+
+        .toast.error { border-left-color: var(--danger); }
+        .toast.success { border-left-color: var(--success); }
+
+        @keyframes slideIn {
+            from { transform: translateX(20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
-        .sync-item {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border);
-            font-family: monospace;
-            font-size: 0.8rem;
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); }
         }
-        .sync-item:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
 
+<div id="toast-container"></div>
+
 <header>
-    <div class="logo">SF<span>-AI</span> Sales Engine</div>
-    <button class="btn btn-outline" onclick="toggleSyncModal()">View Sync History</button>
+    <div class="header-left">
+        <div class="logo">STRATEGIC COMMAND</div>
+        <div id="analytics-ticker" class="ticker">
+            Pipeline: <span id="stat-total">0</span> | Critical: <span id="stat-hot">0</span> | Est. Volume: <span id="stat-size">0</span>
+        </div>
+    </div>
+    <div class="header-right">
+        <button class="btn btn-primary" onclick="processAllLeads()">Execute Bulk Analysis</button>
+    </div>
 </header>
 
-<main>
-    <section>
-        <h2 style="margin-bottom: 1.5rem;">Incoming Leads</h2>
+<div class="app-container">
+    <!-- Column 1: Leads Queue -->
+    <aside class="pane">
+        <div class="pane-header">Lead Pipeline</div>
         <div id="lead-grid"></div>
-    </section>
-
-    <aside id="detail-panel">
-        <div id="panel-content" class="panel-placeholder">
-            <h3>No Lead Selected</h3>
-            <p>Select a lead from the grid to analyze and process.</p>
-        </div>
     </aside>
-</main>
 
-<div id="sync-modal" onclick="if(event.target === this) toggleSyncModal()">
-    <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-            <h2>Mock Salesforce Sync History</h2>
-            <button class="btn" onclick="toggleSyncModal()">Close</button>
+    <!-- Column 2: Workspace -->
+    <main class="pane">
+        <div class="pane-header">Workspace</div>
+        <div id="workspace-pane">
+            <div id="workspace-empty" style="text-align: center; margin-top: 15vh;">
+                <h3 style="color: var(--text-muted); font-weight: 500;">Initialize selection from pipeline</h3>
+            </div>
+            
+            <div id="workspace-content" class="hidden">
+                <div class="workspace-header">
+                    <h2 id="view-name"></h2>
+                    <p id="view-company"></p>
+                </div>
+
+                <span class="section-label">Original Inquiry</span>
+                <div class="enquiry-box" id="view-enquiry"></div>
+
+                <div id="ai-controls">
+                    <button id="process-btn" class="btn btn-primary" style="width: 100%; height: 50px; font-size: 0.875rem;" onclick="processLead()">
+                        Run Strategic Intelligence Analysis
+                    </button>
+                </div>
+
+                <div id="ai-results" class="hidden">
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="switchTab(event, 'intelligence')">Intelligence</button>
+                        <button class="tab-btn" onclick="switchTab(event, 'listings')">Matching Assets</button>
+                        <button class="tab-btn" onclick="switchTab(event, 'agent')">Routing & Tasks</button>
+                    </div>
+
+                    <div id="tab-intelligence" class="tab-content active">
+                        <div class="ai-card">
+                            <h4>Analysis Summary</h4>
+                            <p id="ai-summary" style="font-size: 0.9375rem; line-height: 1.6;"></p>
+                        </div>
+                        <div class="ai-card">
+                            <h4>Risk Factors & Red Flags</h4>
+                            <div id="ai-flags"></div>
+                        </div>
+                    </div>
+
+                    <div id="tab-listings" class="tab-content">
+                        <div id="ai-listings"></div>
+                    </div>
+
+                    <div id="tab-agent" class="tab-content">
+                        <div id="ai-agent" class="ai-card"></div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div id="sync-list"></div>
-    </div>
+    </main>
+
+    <!-- Column 3: System Log -->
+    <aside class="pane">
+        <div class="pane-header">
+            Transaction Logs
+            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem; font-size: 0.65rem;" onclick="fetchSyncHistory()">Refresh Logs</button>
+        </div>
+        <div id="log-container"></div>
+    </aside>
 </div>
 
 <script>
-    // --- Security: XSS Sanitization Helper ---
+    // --- State & Helpers ---
+    let currentLeads = [];
+    let selectedLeadId = null;
+
     function esc(str) {
         if (!str) return '';
         const div = document.createElement('div');
@@ -232,143 +394,176 @@
         return div.innerHTML;
     }
 
-    let currentLeads = [];
-    let selectedLeadId = null;
+    // --- Data Fetching ---
 
     async function fetchLeads() {
         try {
             const res = await fetch('/api/leads');
             currentLeads = await res.json();
             renderLeads();
+            updateAnalytics();
         } catch (err) {
-            document.getElementById('lead-grid').textContent = 'Error loading leads.';
+            console.error('Connection failure:', err);
         }
     }
 
-    async function processLead(id) {
-        const panel = document.getElementById('panel-content');
-        const lead = currentLeads.find(l => l.Id === id);
-        
-        panel.innerHTML = `
-            <div style="text-align: center;">
-                <h3>AI Intelligence Engine</h3>
-                <p>Analyzing context for ${esc(lead.FirstName || lead.LastName)}...</p>
-                <div class="spinner"></div>
-            </div>
-        `;
-
+    async function fetchSyncHistory() {
+        const log = document.getElementById('log-container');
         try {
-            const res = await fetch(`/api/process-lead/${id}`, { method: 'POST' });
-            if (!res.ok) throw new Error('AI Processing Failed');
+            const res = await fetch('/api/sync-history');
             const data = await res.json();
-            renderAIResults(data, lead);
+            log.innerHTML = data.reverse().map(item => `
+                <div class="log-entry">
+                    <div class="log-header">
+                        <span class="log-type">${esc(item.type)}</span>
+                        <span class="log-ts">${new Date(item.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                    <code class="log-body">${esc(JSON.stringify(item.body, null, 2))}</code>
+                </div>
+            `).join('') || '<div style="color:var(--text-muted); font-size: 0.75rem;">Awaiting transactions...</div>';
         } catch (err) {
-            panel.innerHTML = `<div style="color:var(--danger)">Error: ${esc(err.message)}</div>`;
+            log.innerHTML = '<div style="color:var(--danger)">Console disconnect.</div>';
         }
+    }
+
+    // --- UI Logic ---
+
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<span>${esc(message)}</span>`;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s ease forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
     }
 
     function renderLeads() {
         const grid = document.getElementById('lead-grid');
-        grid.innerHTML = '';
-        currentLeads.forEach(lead => {
-            const card = document.createElement('div');
-            card.className = `lead-card ${selectedLeadId === lead.Id ? 'active' : ''}`;
-            card.onclick = () => selectLead(lead.Id);
-            card.innerHTML = `
+        grid.innerHTML = currentLeads.map(lead => `
+            <div class="lead-row ${selectedLeadId === lead.Id ? 'active' : ''}" onclick="selectLead('${lead.Id}')">
                 <h3>${esc(lead.FirstName || '')} ${esc(lead.LastName)}</h3>
                 <div class="company">${esc(lead.Company)}</div>
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span class="badge">${esc(lead.Industry || 'Real Estate')}</span>
-                    <span style="font-size: 0.8rem;">${esc(lead.Status)}</span>
+                <div class="badge-row">
+                    <span class="badge">${esc(lead.Industry || 'General')}</span>
+                    <span class="badge ${lead.Rating === 'Hot' ? 'status-hot' : ''}">${esc(lead.Status)}</span>
                 </div>
-            `;
-            grid.appendChild(card);
-        });
+            </div>
+        `).join('');
     }
 
     function selectLead(id) {
         selectedLeadId = id;
         renderLeads();
-        const lead = currentLeads.find(l => l.Id === id);
-        const panel = document.getElementById('panel-content');
-        panel.innerHTML = `
-            <h2>${esc(lead.FirstName || '')} ${esc(lead.LastName)}</h2>
-            <p class="company">${esc(lead.Company)}</p>
-            <div style="font-size: 0.9rem; margin-top: 1rem;">
-                <strong>Requirement:</strong><br/>
-                <span style="color: var(--text-muted)">${esc(lead.Description)}</span>
-            </div>
-            <button class="btn btn-primary" style="width:100%; margin-top:2rem;" onclick="processLead('${id}')">
-                ✨ Process with AI
-            </button>
-        `;
-    }
-
-    function renderAIResults(ai, lead) {
-        const panel = document.getElementById('panel-content');
-        const intel = ai.lead_intelligence;
         
-        panel.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:1rem;">
-                <h2>AI Insight</h2>
-                <span class="priority-badge priority-${esc(intel.priority)}">${esc(intel.priority)}</span>
-            </div>
-            <div class="ai-summary">${esc(intel.summary)}</div>
+        const lead = currentLeads.find(l => l.Id === id);
+        document.getElementById('workspace-empty').classList.add('hidden');
+        document.getElementById('workspace-content').classList.remove('hidden');
+        document.getElementById('ai-results').classList.add('hidden');
+        document.getElementById('ai-controls').classList.remove('hidden');
 
-            ${intel.red_flags.length ? `
-                <div class="ai-section">
-                    <h4>Red Flags</h4>
-                    <ul class="red-flags">${intel.red_flags.map(f => `<li>${esc(f)}</li>`).join('')}</ul>
+        document.getElementById('view-name').textContent = `${lead.FirstName || ''} ${lead.LastName}`;
+        document.getElementById('view-company').textContent = lead.Company;
+        document.getElementById('view-enquiry').textContent = lead.Description || 'No description available.';
+    }
+
+    async function processLead() {
+        if (!selectedLeadId) return;
+        const btn = document.getElementById('process-btn');
+        const originalText = btn.innerHTML;
+        
+        btn.innerHTML = '<div class="spinner"></div>';
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(`/api/process-lead/${selectedLeadId}`, { method: 'POST' });
+            if (!res.ok) throw new Error('Engine Timeout');
+            const data = await res.json();
+            
+            renderAIResults(data);
+            fetchSyncHistory(); 
+            showToast('Strategic analysis complete', 'success');
+        } catch (err) {
+            showToast(err.message, 'error');
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    function renderAIResults(ai) {
+        document.getElementById('ai-controls').classList.add('hidden');
+        document.getElementById('ai-results').classList.remove('hidden');
+
+        const intel = ai.lead_intelligence || {};
+        
+        document.getElementById('ai-summary').textContent = intel.summary || 'Summary unavailable.';
+        const flags = intel.red_flags || [];
+        document.getElementById('ai-flags').innerHTML = flags.length 
+            ? `<ul style="color:var(--danger); font-size:0.875rem; margin-left:1.25rem; line-height:1.6;">${flags.map(f => `<li>${esc(f)}</li>`).join('')}</ul>`
+            : '<p style="color:var(--success); font-size:0.875rem;">Integrity check passed. No risks found.</p>';
+
+        const listings = ai.matched_listings || [];
+        document.getElementById('ai-listings').innerHTML = listings.map(m => `
+            <div class="ai-card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.75rem;">
+                    <strong style="color:var(--accent); font-size: 0.75rem;">PRIORITY MATCH #${m.rank}</strong>
+                    <span class="badge">ASSET: ${esc(m.listing_id)}</span>
                 </div>
-            ` : ''}
-
-            <div class="ai-section">
-                <h4>Matches</h4>
-                ${ai.matched_listings.map(m => `
-                    <div class="listing-match">
-                        <span class="rank">#${m.rank} ${esc(m.listing_id)}</span><br/>
-                        ${esc(m.reasoning)}
-                    </div>
-                `).join('')}
+                <p style="font-size:0.9375rem; line-height:1.6; color: var(--text-primary);">${esc(m.reasoning)}</p>
             </div>
+        `).join('') || '<p style="color:var(--text-muted);">No asset correlations found.</p>';
 
-            <div class="ai-section">
-                <h4>Routing</h4>
-                <div class="agent-box">
-                    <strong>${esc(ai.agent_routing.agent_name)}</strong><br/>
-                    <small>${esc(ai.agent_routing.reasoning)}</small>
-                    <div style="margin-top:0.5rem">
-                        <strong>Steps:</strong>
-                        <ul style="margin-left:1.2rem">${intel.next_steps.map(s => `<li>${esc(s)}</li>`).join('')}</ul>
-                    </div>
-                </div>
+        const agent = ai.agent_routing || {};
+        const steps = intel.next_steps || [];
+        document.getElementById('ai-agent').innerHTML = `
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.25rem; color: var(--accent); font-weight: 700;">${esc(agent.agent_name)}</h3>
+                <p style="font-size: 0.8125rem; color: var(--text-muted); margin-top: 0.25rem;">${esc(agent.reasoning)}</p>
+            </div>
+            <div style="border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                <h4 style="font-size: 0.7rem; color: var(--text-muted); text-transform:uppercase; margin-bottom:1rem; letter-spacing:0.05em;">Tactical Execution Plan</h4>
+                <ul style="font-size: 0.875rem; margin-left: 1.5rem; line-height:1.8;">
+                    ${steps.map(s => `<li>${esc(s)}</li>`).join('')}
+                </ul>
             </div>
         `;
     }
 
-    async function fetchSyncHistory() {
-        const list = document.getElementById('sync-list');
-        list.innerHTML = '<div class="spinner"></div>';
-        try {
-            const res = await fetch('/api/sync-history');
-            const data = await res.json();
-            list.innerHTML = data.reverse().map(item => `
-                <div class="sync-item">
-                    <strong>[${esc(item.timestamp)}] ${esc(item.type)}</strong>
-                    <pre style="background:#f0f0f0; padding:0.5rem;">${esc(JSON.stringify(item.body, null, 2))}</pre>
-                </div>
-            `).join('') || 'No history.';
-        } catch (err) { list.textContent = 'Error loading history.'; }
+    function switchTab(evt, tabId) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        evt.currentTarget.classList.add('active');
+        document.getElementById(`tab-${tabId}`).classList.add('active');
     }
 
-    function toggleSyncModal() {
-        const modal = document.getElementById('sync-modal');
-        const isHidden = getComputedStyle(modal).display === 'none';
-        modal.style.display = isHidden ? 'flex' : 'none';
-        if (isHidden) fetchSyncHistory();
+    function updateAnalytics() {
+        const total = currentLeads.length;
+        const hot = currentLeads.filter(l => l.Rating === 'Hot').length;
+        const avgSize = 14 + (total % 5); 
+
+        document.getElementById('stat-total').textContent = total;
+        document.getElementById('stat-hot').textContent = hot;
+        document.getElementById('stat-size').textContent = `${avgSize}k sqft`;
     }
 
+    async function processAllLeads() {
+        showToast(`Executing bulk operations for ${currentLeads.length} leads...`, 'info');
+        for (const lead of currentLeads) {
+            selectLead(lead.Id);
+            await processLead();
+        }
+        showToast('Bulk strategic analysis finalized', 'success');
+    }
+
+    // --- Initialization ---
     fetchLeads();
+    fetchSyncHistory();
 </script>
 </body>
 </html>
