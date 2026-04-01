@@ -15,6 +15,19 @@ The SF-AI Sales Engine transforms unstructured lead data into high-velocity sale
 
 ---
 
+## Demo
+
+![Application Snapshot](demo/application_snapshot.png)
+
+<div align="center">
+  <br/>
+  <a href="demo/application_demo.mov">
+    <img src="https://img.shields.io/badge/▶_Watch_Demo_Video-blue?style=for-the-badge" alt="Watch Demo Video">
+  </a>
+</div>
+
+---
+
 ## Core Capabilities
 
 *   **Intelligent Property Matching:** Context-aware matching that identifies hidden constraints such as specific zoning needs, 24/7 access requirements, or niche industrial features.
