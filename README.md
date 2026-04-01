@@ -21,20 +21,15 @@ The SF-AI Sales Engine transforms unstructured lead data into high-velocity sale
 *   **Automated Agent Routing:** High-precision routing based on agent specialty (e.g., Tech, Retail, SME) and current workload, ensuring optimized lead distribution.
 *   **Lead Intelligence Extraction:** Deep NLP analysis to identify red flags (spam, budget mismatches) and priority status based on company profile and intent.
 *   **Salesforce Sync Engine (Mock):** A robust data layer that mocks PATCH Lead, POST Task, and PATCH Opportunity endpoints, capturing every automated CRM write in a transparent sync history.
-*   **Enterprise 3-Pane UI:** A modern, high-performance dashboard featuring a responsive grid, real-time AI status overlays, and a detailed sync inspection modal.
+*   **Enterprise 2-Pane UI:** A modern, high-performance dashboard featuring a responsive Lead Pipeline and a Strategic Workspace.
 
 ---
 
-## Model-Agnostic AI Architecture
+## AI Architecture
 
-While this repository is configured to utilize Google Gemini (gemini-1.5-pro or gemini-3.1-pro) via the @google/generative-ai SDK, the architecture is designed to be Model-Agnostic.
+This repository is configured to utilize **Google Gemini 2.5 Flash** via the brand-new `@google/genai` SDK.
 
-The core prompt engineering logic and data orchestration layers are decoupled from the specific AI provider. Developers can swap the intelligence layer to use other leading LLMs by updating the environment variables and the API call block in the backend:
-*   OpenAI (GPT-4o)
-*   Anthropic (Claude 3.5 Sonnet)
-*   Mistral / Llama 3 (via local or cloud inference)
-
-The system's strict JSON output enforcement ensures that the frontend and CRM sync logic remain stable regardless of the model powering the analysis.
+The system's strict JSON output enforcement ensures that the frontend and CRM sync logic remain stable.
 
 ---
 
