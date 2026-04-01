@@ -9,24 +9,52 @@ const PORT = process.env.PORT || 3000;
 
 // Initialize Gemini SDK
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Using gemini-1.5-pro as the standard high-performance model
 const model = genAI.getGenerativeModel({ 
   model: 'gemini-1.5-pro',
   generationConfig: { responseMimeType: "application/json" }
 });
 
+// Helper to safely parse Gemini responses and strip markdown blocks
+function parseGeminiResponse(rawText) {
+  try {
+    const cleanText = rawText.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
+    return JSON.parse(cleanText);
+  } catch (error) {
+    console.error("AI JSON Parse Error. Raw Output:", rawText);
+    throw new Error("Gemini returned malformed JSON.");
+  }
+}
+
 // Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Synchronously read and parse data files into memory
-const salesforceData = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'salesforce_data.json'), 'utf8'));
-const listings = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'listings.json'), 'utf8'));
+// Safe Data Loading Initialization
+let salesforceData = { leads: [], accounts: [], opportunities: [], users: [] };
+let listings = [];
+
+try {
+    const sfPath = path.join(__dirname, 'data', 'salesforce_data.json');
+    const listingsPath = path.join(__dirname, 'data', 'listings.json');
+
+    if (!fs.existsSync(sfPath) || !fs.existsSync(listingsPath)) {
+        throw new Error("Data files missing. Please ensure /data/salesforce_data.json and /data/listings.json exist.");
+    }
+
+    salesforceData = JSON.parse(fs.readFileSync(sfPath, 'utf8'));
+    listings = JSON.parse(fs.readFileSync(listingsPath, 'utf8'));
+    console.log("✅ Mock data successfully loaded into memory.");
+} catch (error) {
+    console.error("❌ CRITICAL ERROR: Failed to load JSON data on startup.", error.message);
+    process.exit(1);
+}
 
 // Leads and sync history in memory
 const leads = salesforceData.leads || [];
 const accounts = salesforceData.accounts || [];
 const opportunities = salesforceData.opportunities || [];
-const agents = salesforceData.users || []; // 'users' are our agents
+const agents = salesforceData.users || [];
 const syncHistory = [];
 
 // --- Mock Salesforce REST Endpoints ---
@@ -73,22 +101,19 @@ app.post('/api/process-lead/:id', async (req, res) => {
 
   try {
     const systemInstruction = `
-      You are an expert commercial real estate strategist. Your task is to analyze a new lead, match it to the best property listings, and route it to the most suitable sales agent.
+      You are an expert commercial real estate strategist. Analyze the lead and return structured JSON.
       
       CONTEXT DATA:
       - Current Lead: ${JSON.stringify(lead)}
       - Available Listings: ${JSON.stringify(listings)}
-      - Existing Accounts: ${JSON.stringify(accounts)}
-      - Existing Opportunities: ${JSON.stringify(opportunities)}
       - Active Sales Agents: ${JSON.stringify(agents.filter(a => a.IsActive))}
 
       STRATEGY GUIDELINES:
-      1. MATCHING: Find the top 3 best listings. Catch hidden constraints (budget, location, specific needs).
-      2. INTELLIGENCE: Identify red flags or linked accounts.
-      3. ROUTING: Assign the best agent based on their Speciality__c.
+      1. MATCHING: Find the top 3 best listings.
+      2. INTELLIGENCE: Identify red flags and next steps.
+      3. ROUTING: Assign the best agent.
       
-      OUTPUT FORMAT:
-      You must return a JSON object strictly following this schema:
+      OUTPUT FORMAT (JSON):
       {
         "matched_listings": [
           { "listing_id": "string", "rank": "number", "reasoning": "string" }
@@ -109,56 +134,35 @@ app.post('/api/process-lead/:id', async (req, res) => {
     `;
 
     const result = await model.generateContent(systemInstruction);
-    const aiResponse = JSON.parse(result.response.text());
+    const aiResponse = parseGeminiResponse(result.response.text());
 
     // --- Execute Mock Salesforce Updates ---
 
-    // 1. Update Lead with recommended agent
     logSync('PATCH_LEAD', id, {
       OwnerId: aiResponse.agent_routing.agent_id,
       Status: 'Working',
       AI_Summary__c: aiResponse.lead_intelligence.summary
     });
 
-    // 2. Create Task for the routed agent
     logSync('POST_TASK', null, {
       WhoId: id,
       OwnerId: aiResponse.agent_routing.agent_id,
       Subject: `Follow up on AI-Processed Lead: ${lead.Company}`,
-      Description: aiResponse.lead_intelligence.next_steps.join('\\n'),
+      Description: (aiResponse.lead_intelligence.next_steps || []).join('\n'),
       Priority: aiResponse.lead_intelligence.priority === 'High' ? 'High' : 'Normal'
     });
-
-    // 3. Update Opportunity if identified
-    const relatedOpp = opportunities.find(opp => 
-      opp.Name.includes(lead.Company) || (lead.Email && opp.Description && opp.Description.includes(lead.Email))
-    );
-    if (relatedOpp) {
-      logSync('PATCH_OPPORTUNITY', relatedOpp.Id, {
-        StageName: 'Qualification',
-        Description: `${relatedOpp.Description}\\n\\nAI Insight: ${aiResponse.lead_intelligence.summary}`
-      });
-    }
 
     res.json(aiResponse);
 
   } catch (error) {
     console.error('AI Processing Error:', error);
-    res.status(500).json({ error: 'Failed to process lead with AI' });
+    res.status(500).json({ error: error.message || 'Failed to process lead with AI' });
   }
 });
 
-// --- Frontend Endpoints ---
+app.get('/api/leads', (req, res) => res.json(leads));
+app.get('/api/sync-history', (req, res) => res.json(syncHistory));
 
-app.get('/api/leads', (req, res) => {
-  res.json(leads);
-});
-
-app.get('/api/sync-history', (req, res) => {
-  res.json(syncHistory);
-});
-
-// Start Server
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
