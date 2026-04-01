@@ -21,7 +21,7 @@ The SF-AI Sales Engine transforms unstructured lead data into high-velocity sale
 
 <div align="center">
   <br/>
-  <a href="demo/application_demo.mov">
+  <a href="demo/application_demo.mp4">
     <img src="https://img.shields.io/badge/▶_Watch_Demo_Video-blue?style=for-the-badge" alt="Watch Demo Video">
   </a>
 </div>
