@@ -2,18 +2,13 @@ require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/genai');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Initialize Gemini SDK
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-// Using gemini-1.5-pro as the standard high-performance model
-const model = genAI.getGenerativeModel({ 
-  model: 'gemini-1.5-pro',
-  generationConfig: { responseMimeType: "application/json" }
-});
+// Initialize the new GenAI client
+const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // Helper to safely parse Gemini responses and strip markdown blocks
 function parseGeminiResponse(rawText) {
@@ -133,8 +128,15 @@ app.post('/api/process-lead/:id', async (req, res) => {
       }
     `;
 
-    const result = await model.generateContent(systemInstruction);
-    const aiResponse = parseGeminiResponse(result.response.text());
+    const response = await client.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: systemInstruction,
+      config: { 
+        responseMimeType: 'application/json' 
+      }
+    });
+
+    const aiResponse = JSON.parse(response.text);
 
     // --- Execute Mock Salesforce Updates ---
 

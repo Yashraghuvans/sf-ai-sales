@@ -120,3 +120,4 @@ Icon
 *.njsproj
 *.sln
 *.sw?
+.sfdx/
